@@ -1,15 +1,12 @@
-def restock_coins(amounts: list):
-    for coin_type, amount in zip(TYPE_COIN, amounts):
-        coins[coin_type] += amount
-    return None
+# initialize
+money = 0
+products = {}
 
 
-with open("vending.dat", "r") as f:
-    TYPE_COIN = [2, 1, 0.5]
-    coins = {
-        coin_type: float(coin)
-        for coin_type, coin in zip(TYPE_COIN, f.readline().strip().split())
-    }
+def recharge_money(amount: int):
+    money += amount
+
+    money = int(f.readline())
     products = {}
     for line in f:
         info_product = line.strip().split()
@@ -18,6 +15,7 @@ with open("vending.dat", "r") as f:
         price = float(info_product[2])
         products[code] = {"stock": stock, "price": price}
 
-print(coins)
-restock_coins([5, 5, 5])
-print(coins)
+
+print(money)
+recharge_money(100)
+print(money)

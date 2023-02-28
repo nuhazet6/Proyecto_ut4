@@ -45,12 +45,14 @@ def do_order(operation_data):
     stock = get_stock(code)
     payed = sum([value*int(amnt) for value,amnt in zip(TYPE_COIN,amnt_coins)])
     for coin_type,amnt in zip(TYPE_COIN, amnt_coins):
-        coins[coin_type] += amnt   
-    change = payed - price * quant#antes o después de introducir sus monedas en el balance?
+        coins[coin_type] += amnt
+    #antes o después de introducir sus monedas en el balance?   
+    change = payed - price * quant
     change_amnts = change_coins(change)
-    change = (change == sum([k*v for k,v in change_amnts.items()]))-1#hacerselo mirar(dejarla por ahí en cualquier caso)
+    #hacerselo mirar(dejarla por ahí en cualquier caso)
+    change = (change == sum([k*v for k,v in change_amnts.items()]))-1
     stock_movement = stock - quant
-    error_catched = '-' in (str(price) + str(stock) + str(change) + str(stock_movement))#función? n argumentos iterados y sumados como str
+    error_catched = '-' in (str(price) + str(stock) + str(change) + str(stock_movement))#?
     if error_catched:
         for coin_type,amnt in zip(TYPE_COIN, amnt_coins):
             coins[coin_type] -= amnt 

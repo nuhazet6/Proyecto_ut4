@@ -3,7 +3,7 @@ def change_price(code: str, price: float):
         products[code]["price"] = price
         error = 0
     else:
-        error = -1
+        error = "E1"
     return error
 
 
