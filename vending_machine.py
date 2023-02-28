@@ -71,5 +71,16 @@ for order in orders:
 
 #recarga de producto  N
 #cambio precio  J
+def change_price(price, code):
+    if code in products:
+        products[code]['price'] = price
+        error = 0
+    else:
+        error = -1
+    return error
 #recarga monedas  J
+def restock_coins(amounts: list):
+    for coin_type, amount in zip(TYPE_COIN, amounts):
+        coins[coin_type] += amount
+    return None
 #salida N
