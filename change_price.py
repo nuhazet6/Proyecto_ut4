@@ -1,4 +1,4 @@
-def change_price(code: str, price: float):
+def change_price(code: str, price: int):
     if code in products:
         products[code]["price"] = price
         error = 0
@@ -8,11 +8,7 @@ def change_price(code: str, price: float):
 
 
 with open("vending.dat", "r") as f:
-    TYPE_COIN = [2, 1, 0.5]
-    coins = {
-        coin_type: float(coin)
-        for coin_type, coin in zip(TYPE_COIN, f.readline().strip().split())
-    }
+    money = int(f.readline())
     products = {}
     for line in f:
         info_product = line.strip().split()
