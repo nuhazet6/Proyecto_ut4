@@ -18,15 +18,15 @@ with open("operations.dat", "r") as f:
         info_envio = line.strip().split()
         order_type = info_envio[0]
         code = info_envio[1]
-        amount = int(info_envio[2])
-        money = [int(i) for i in info_envio[3:]]
+        amount = float(info_envio[2])
+        money = [float(i) for i in info_envio[3:]]
         orders.append((order_type, code, amount, money))
 print(products, coins)
 
 
 def price(code):
     info = products.get(code, {"ERROR": -1})
-    price = list(info.items()[0])
+    price = info.items()[0]
     return price
 
 
