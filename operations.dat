@@ -1,13 +1,14 @@
 M 50
 O F19 4 10
-R D12 7
-R F10 3 
-R F11 4
 R F12 5 
+kaka
+R F11 4
 R F13 7  
 R D12 7
 P F10 1 
 P F11 2
+R D12 7
+R F10 3 
 P F12 3 
 P F13 4
 O F11 4 10

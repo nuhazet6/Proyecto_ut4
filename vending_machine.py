@@ -1,88 +1,67 @@
-with open("vending.dat", "r") as f:
-    TYPE_COIN = [2, 1, 0.5]
-    coins = {
-        coin_type: float(coin) for coin_type, coin in zip(TYPE_COIN, f.readline().strip().split())
-    }
-    products = {}
-    for line in f:
-        info_product = line.strip().split()
-        code = info_product[0]
-        stock = int(info_product[1])
-        price = float(info_product[2])
-        products[code] = {"stock": stock, "price": price}
-
-with open("operations.dat", "r") as f:
-    orders = []
-    for line in f:
-        info_envio = line.strip().split()
-        orders.append(info_envio)
-
-def get_price(code):
-    info = products.get(code, {})
-    price = info.get('price', -1)#ERROR: -1
-    return price
-
-def get_stock(code):
-    info = products.get(code, {})
-    stock = info.get('stock', -2)#ERROR: -2
-    return stock
-
-def get_coin(coin_type):
-    return  coins.get(coin_type, -3)
-
-def change_coins(change):
-    change_amnts = {}
-    for coin_type in TYPE_COIN:
-        change_amnts[coin_type] = change // coin_type 
-        if change_amnts[coin_type] > coins[coin_type]:
-            change_amnts[coin_type] = coins[coin_type]#logica de devolución?
-        change -= change_amnts[coin_type]
-    return change_amnts
-    
-def do_order(operation_data):
-    code, quant, *amnt_coins = operation_data
-    price = get_price(code)
-    stock = get_stock(code)
-    payed = sum([value*int(amnt) for value,amnt in zip(TYPE_COIN,amnt_coins)])
-    for coin_type,amnt in zip(TYPE_COIN, amnt_coins):
-        coins[coin_type] += amnt
-    #antes o después de introducir sus monedas en el balance?   
-    change = payed - price * quant
-    change_amnts = change_coins(change)
-    #hacerselo mirar(dejarla por ahí en cualquier caso)
-    change = (change == sum([k*v for k,v in change_amnts.items()]))-1
-    stock_movement = stock - quant
-    error_catched = '-' in (str(price) + str(stock) + str(change) + str(stock_movement))#?
-    if error_catched:
-        for coin_type,amnt in zip(TYPE_COIN, amnt_coins):
-            coins[coin_type] -= amnt 
+#tiene sentido pasar los diccionarios? --> no va bi
+def restock_product(code: str, quantity: int, machine_products: dict):
+    if code in machine_products:
+        machine_products[code]["stock"] += quantity
     else:
-        change_amnts = change_coins(change)
-        for coin_type in (TYPE_COIN):
-            coins[coin_type] -= change_amnts[coin_type]
-    return 
+        machine_products[code] = {"stock": quantity, "price": 0}
 
-for order in orders:
-    operation_type, operation_data = order[0], order[1:]
-    match operation_type:
-        case 'O':
-        case 'R':
-        case 'P':
-        case 'C':
-        case _: #capturar error de operación no soportada
-
-#recarga de producto  N
-#cambio precio  J
-def change_price(price, code):
-    if code in products:
-        products[code]['price'] = price
-        error = 0
+def change_price(code: str, price: int, machine_products: dict):
+    if code in machine_products:
+        machine_products[code]["price"] = price
+        error = None
     else:
-        error = -1
+        error = 'E1'
     return error
-#recarga monedas  J
-def restock_coins(amounts: list):
-    for coin_type, amount in zip(TYPE_COIN, amounts):
-        coins[coin_type] += amount
-    return None
-#salida N
+
+def money_movement(movement: int, machine_status: dict):
+    machine_status['machine_money'] += movement
+
+def process_order(code: str, quantity: int, money: int, machine_status: dict):
+    product = machine_status['machine_products'].get(code)
+    if product:
+        if quantity > product['stock']:
+            return 'E2'
+        else:
+            total_cost = product["price"] * quantity
+            if money > total_cost:
+                money_movement(total_cost, machine_status)
+                product["stock"] -= quantity
+            else:
+                return 'E3'
+    else:
+        return 'E1'
+    
+#los productos se van introduciendo y eliminando según toque, el dinero se modifica el valor
+machine_status = {'machine_money': 0, 'machine_products': {}}
+with open('operations.dat', 'r') as f:
+    for row in f:
+        operation_type, *operation_data = row.split()
+        match operation_type:
+            case 'M':
+                movement = int(operation_data[0])
+                money_movement(movement, machine_status)
+            case 'O':
+                code, quantity, money = operation_data
+                quantity = int(quantity)
+                money = int(money)
+                process_order(code, quantity, money, machine_status)
+            case 'R':
+                code, quantity = operation_data
+                quantity = int(quantity)
+                restock_product(code, quantity, machine_status['machine_products'])
+            case 'P':
+                code, price = operation_data
+                price = int(price)
+                change_price(code, price, machine_status['machine_products'])
+            case _:
+                print("Operación no reconocida, lo lamentamos.")
+#en este punto el diccionario guarda del estado de la máquina, falta formatear la salida:
+#ordenar los productos
+machine_status['machine_products'] = dict(sorted(machine_status['machine_products'].items(), key=lambda t: t[0]))
+#formateado para la salida
+with open('status.dat', 'w') as f:
+    money = str(machine_status['machine_money'])
+    f.write(f'{money}\n')
+    for product_code, product_data in machine_status['machine_products'].items():
+        stock, price = product_data['stock'], product_data['price']
+        f.write(f'{product_code} {stock} {price}\n') 
