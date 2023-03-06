@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 def restock_product(code: str, quantity: int, machine_products: dict):
     if code in machine_products:
         machine_products[code]["stock"] += quantity
@@ -12,6 +13,38 @@ def change_price(code: str, price: int, machine_products: dict):
     else:
         error = "E1"
     return error
+=======
+with open("vending.dat", "r") as f:
+    TYPE_COIN = [2, 1, 0.5]
+    coins = {
+        type: float(coin) for type, coin in zip(TYPE_COIN, f.readline().strip().split())
+    }
+    products = {}
+    for line in f:
+        info_product = line.strip().split()
+        code = info_product[0]
+        stock = int(info_product[1])
+        price = float(info_product[2])
+        products[code] = {"stock": stock, "price": price}
+
+with open("operations.dat", "r") as f:
+    orders = []
+    codes = set()
+    for line in f:
+        info_envio = line.strip().split()
+        order_type = info_envio[0]
+        code = info_envio[1]
+        amount = float(info_envio[2])
+        money = [float(i) for i in info_envio[3:]]
+        orders.append((order_type, code, amount, money))
+print(products, coins)
+
+
+def price(code):
+    info = products.get(code, {"ERROR": -1})
+    price = info.items()[0]
+    return price
+>>>>>>> f03d129d59c1822cc0ed22a2d4d5f68515e0ef7c
 
 
 def money_movement(movement: int, machine_status: dict):
