@@ -42,28 +42,29 @@ def run(operations_path: Path) -> bool:
     # los productos se van introduciendo y eliminando según toque, el dinero se modifica el valor
     machine_status = {"machine_money": 0, "machine_products": {}}
     with open(operations_path, "r") as f:
-        for row in f:
-            operation_type, *operation_data = row.split()
-            match operation_type:
-                case "M":
-                    movement = int(operation_data[0])
-                    money_movement(movement, machine_status)
-                case "O":
-                    code, quantity, money = operation_data
-                    quantity = int(quantity)
-                    money = int(money)
-                    process_order(code, quantity, money, machine_status)
-                case "R":
-                    code, quantity = operation_data
-                    quantity = int(quantity)
-                    restock_product(code, quantity, machine_status["machine_products"])
-                case "P":
-                    code, price = operation_data
-                    price = int(price)
-                    change_price(code, price, machine_status["machine_products"])
-                case _:
-                    print("Operación no reconocida, lo lamentamos.")
-            print(f"")
+        operation_list = f.readlines()
+    for operation in operation_list:
+        operation_type, *operation_data = operation.split()
+        match operation_type:
+            case "M":
+                movement = int(operation_data[0])
+                money_movement(movement, machine_status)
+            case "O":
+                code, quantity, money = operation_data
+                quantity = int(quantity)
+                money = int(money)
+                process_order(code, quantity, money, machine_status)
+            case "R":
+                code, quantity = operation_data
+                quantity = int(quantity)
+                restock_product(code, quantity, machine_status["machine_products"])
+            case "P":
+                code, price = operation_data
+                price = int(price)
+                change_price(code, price, machine_status["machine_products"])
+            case _:
+                print("Operación no reconocida, lo lamentamos.")
+        print(f"")
     # en este punto el diccionario guarda del estado de la máquina, falta formatear la salida:
     # ordenar los productos
     machine_status["machine_products"] = dict(
