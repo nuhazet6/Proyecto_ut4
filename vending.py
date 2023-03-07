@@ -8,24 +8,24 @@ from pathlib import Path
 def run(operations_path: Path) -> bool:
     status_path = "data/vending/status.dat"
 
-    def restock_product(code: str, quantity: int, machine_products: dict):
+    def restock_product(code: str, quantity: int, machine_products: dict) -> None:
         if code in machine_products:
             machine_products[code]["stock"] += quantity
         else:
             machine_products[code] = {"stock": quantity, "price": 0}
 
-    def change_price(code: str, price: int, machine_products: dict):
+    def change_price(code: str, price: int, machine_products: dict) -> (str | None):
         if code in machine_products:
             machine_products[code]["price"] = price
-            error = None
-        else:
-            error = "E1"
-        return error
+            return None
+        return "E1"
 
-    def money_movement(movement: int, machine_status: dict):
+    def money_movement(movement: int, machine_status: dict) -> None:
         machine_status["machine_money"] += movement
 
-    def process_order(code: str, quantity: int, money: int, machine_status: dict):
+    def process_order(
+        code: str, quantity: int, money: int, machine_status: dict
+    ) -> (str | None):
         if product_data := machine_status["machine_products"].get(code):
             if quantity > product_data["stock"]:
                 return "E2"
@@ -34,37 +34,53 @@ def run(operations_path: Path) -> bool:
                 if money >= total_cost:
                     money_movement(total_cost, machine_status)
                     product_data["stock"] -= quantity
+                    return None
                 else:
                     return "E3"
         else:
             return "E1"
 
     # los productos se van introduciendo y eliminando según toque, el dinero se modifica el valor
+    error_descriptions = {
+        "E1": "Product not found",
+        "E2": "Unavailable stock",
+        "E3": "Not enough user money",
+    }
     machine_status = {"machine_money": 0, "machine_products": {}}
     with open(operations_path, "r") as f:
         operation_list = f.readlines()
     for operation in operation_list:
-        operation_type, *operation_data = operation.split()
+        error_code = None
+        operation_type, *operation_args = operation_data = operation.split()
         match operation_type:
             case "M":
-                movement = int(operation_data[0])
+                movement = int(operation_args[0])
                 money_movement(movement, machine_status)
             case "O":
-                code, quantity, money = operation_data
+                code, quantity, money = operation_args
                 quantity = int(quantity)
                 money = int(money)
-                process_order(code, quantity, money, machine_status)
+                error_code = process_order(code, quantity, money, machine_status)
             case "R":
-                code, quantity = operation_data
+                code, quantity = operation_args
                 quantity = int(quantity)
                 restock_product(code, quantity, machine_status["machine_products"])
             case "P":
-                code, price = operation_data
+                code, price = operation_args
                 price = int(price)
-                change_price(code, price, machine_status["machine_products"])
+                error_code = change_price(
+                    code, price, machine_status["machine_products"]
+                )
             case _:
                 print("Operación no reconocida, lo lamentamos.")
-        print(f"")
+        # salida por pantalla de la información de la operación
+        if error_code:
+            operation_data.append(f"{error_code}: {error_descriptions[error_code]}")
+            message = " ".join(operation_data)
+            print(f"❌ {message}")
+        else:
+            message = " ".join(operation_data)
+            print(f"✅ {message}")
     # en este punto el diccionario guarda del estado de la máquina, falta formatear la salida:
     # ordenar los productos
     machine_status["machine_products"] = dict(

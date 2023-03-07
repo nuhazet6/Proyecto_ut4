@@ -8,10 +8,8 @@ def restock_product(code: str, quantity: int, machine_products: dict):
 def change_price(code: str, price: int, machine_products: dict):
     if code in machine_products:
         machine_products[code]["price"] = price
-        error = None
-    else:
-        error = "E1"
-    return error
+        return None
+    return "E1"
 
 
 def money_movement(movement: int, machine_status: dict):
@@ -28,6 +26,7 @@ def process_order(code: str, quantity: int, money: int, machine_status: dict):
             if money > total_cost:
                 money_movement(total_cost, machine_status)
                 product["stock"] -= quantity
+                return None
             else:
                 return "E3"
     else:
