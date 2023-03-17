@@ -4,48 +4,52 @@
 import filecmp
 from pathlib import Path
 
+ERROR_DESCRIPTIONS = {
+    "E1": "Product not found",
+    "E2": "Unavailable stock",
+    "E3": "Not enough user money",
+}
+
+
+def restock_product(code: str, quantity: int, machine_products: dict):
+    if code in machine_products:
+        machine_products[code]["stock"] += quantity
+    else:
+        machine_products[code] = {"stock": quantity, "price": 0}
+
+
+def change_price(code: str, price: int, machine_products: dict) -> (str | None):
+    if code in machine_products:
+        machine_products[code]["price"] = price
+        return None
+    return "E1"
+
+
+def money_movement(movement: int, machine_status: dict) -> None:
+    machine_status["machine_money"] += movement
+
+
+def process_order(
+    code: str, quantity: int, money: int, machine_status: dict
+) -> (str | None):
+    if product_data := machine_status["machine_products"].get(code):
+        if quantity > product_data["stock"]:
+            return "E2"
+        else:
+            total_cost = product_data["price"] * quantity
+            if money >= total_cost:
+                money_movement(total_cost, machine_status)
+                product_data["stock"] -= quantity
+                return None
+            else:
+                return "E3"
+    else:
+        return "E1"
+
 
 def run(operations_path: Path) -> bool:
     status_path = "data/vending/status.dat"
-
-    def restock_product(code: str, quantity: int, machine_products: dict) -> None:
-        if code in machine_products:
-            machine_products[code]["stock"] += quantity
-        else:
-            machine_products[code] = {"stock": quantity, "price": 0}
-
-    def change_price(code: str, price: int, machine_products: dict) -> (str | None):
-        if code in machine_products:
-            machine_products[code]["price"] = price
-            return None
-        return "E1"
-
-    def money_movement(movement: int, machine_status: dict) -> None:
-        machine_status["machine_money"] += movement
-
-    def process_order(
-        code: str, quantity: int, money: int, machine_status: dict
-    ) -> (str | None):
-        if product_data := machine_status["machine_products"].get(code):
-            if quantity > product_data["stock"]:
-                return "E2"
-            else:
-                total_cost = product_data["price"] * quantity
-                if money >= total_cost:
-                    money_movement(total_cost, machine_status)
-                    product_data["stock"] -= quantity
-                    return None
-                else:
-                    return "E3"
-        else:
-            return "E1"
-
     # los productos se van introduciendo y eliminando según toque, el dinero se modifica el valor
-    error_descriptions = {
-        "E1": "Product not found",
-        "E2": "Unavailable stock",
-        "E3": "Not enough user money",
-    }
     machine_status = {"machine_money": 0, "machine_products": {}}
     with open(operations_path, "r") as f:
         operation_list = f.readlines()
@@ -75,7 +79,7 @@ def run(operations_path: Path) -> bool:
                 print("Operación no reconocida, lo lamentamos.")
         # salida por pantalla de la información de la operación
         if error_code:
-            operation_data.append(f"{error_code}: {error_descriptions[error_code]}")
+            operation_data.append(f"{error_code}: {ERROR_DESCRIPTIONS[error_code]}")
             message = " ".join(operation_data)
             print(f"❌ {message}")
         else:
